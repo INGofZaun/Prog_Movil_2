@@ -15,7 +15,6 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -28,13 +27,16 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
     }
@@ -54,6 +56,7 @@ dependencies {
     // ViewModel y LiveData
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2") // ✅ Agregado
 
     // Room (Base de datos SQLite)
     implementation("androidx.room:room-runtime:2.6.1")
@@ -64,8 +67,15 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
+    // OkHttp (Para depuración de llamadas a API)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0") // ✅ Agregado
+
     // WorkManager (Para la sincronización automática)
     implementation("androidx.work:work-runtime-ktx:2.8.1")
+
+    // Coroutines (Para asincronía)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3") // ✅ Agregado
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3") // ✅ Agregado
 
     // Pruebas
     testImplementation(libs.junit)
