@@ -1,48 +1,57 @@
 package com.example.exchangerateapp.workers
 
 import android.content.Context
-import androidx.work.Worker
+import android.util.Log
+import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.exchangerateapp.api.RetrofitInstance
 import com.example.exchangerateapp.data.ExchangeRate
 import com.example.exchangerateapp.data.ExchangeRateDatabase
-import com.example.exchangerateapp.data.ExchangeRateDao
+import com.example.exchangerateapp.data.ExchangeRateDao  // ✅ Importamos correctamente
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.runBlocking
+import retrofit2.HttpException
 
 class SyncExchangeRatesWorker(
     context: Context,
     workerParams: WorkerParameters
-) : Worker(context, workerParams) {
+) : CoroutineWorker(context, workerParams) {
 
-    override fun doWork(): Result {
+    override suspend fun doWork(): Result {
         return try {
-            // Utiliza runBlocking para permitir ejecutar funciones suspend
-            runBlocking {
-                // Obtén los datos de la API
-                val response = RetrofitInstance.api.getExchangeRates()
+            Log.d("SyncWorker", "🔄 Iniciando sincronización de datos...")
 
-                // Mapea la respuesta a objetos ExchangeRate
-                val rates = response.rates.map { (currency, rate) ->
-                    ExchangeRate(
-                        date = response.date,
-                        baseCurrency = response.base,
-                        targetCurrency = currency,
-                        rate = rate
-                    )
-                }
+            // Obtiene los datos de la API
+            val response = RetrofitInstance.fetchExchangeRates()
 
-                // Inserta los datos en la base de datos
-                val database = ExchangeRateDatabase.getDatabase(applicationContext)
-                val dao = database.exchangeRateDao()
+            Log.d("SyncWorker", "✅ Datos obtenidos de la API: Base: ${response.base_code}, Fecha: ${response.time_last_update_utc}")
 
-                // Usamos corutinas para insertar en la base de datos
-                insertRatesInDatabase(dao, rates)
+            // Mapea la respuesta a objetos ExchangeRate
+            val rates = response.conversion_rates.map { (currency, rate) ->
+                ExchangeRate(
+                    date = response.time_last_update_utc,
+                    baseCurrency = response.base_code,
+                    targetCurrency = currency,
+                    rate = rate
+                )
             }
 
+            Log.d("SyncWorker", "📌 ${rates.size} tipos de cambio convertidos.")
+
+            // Inserta los datos en la base de datos
+            val database = ExchangeRateDatabase.getDatabase(applicationContext)
+            val dao: ExchangeRateDao = database.exchangeRateDao()  // ✅ Corregido
+
+            insertRatesInDatabase(dao, rates)  // ✅ Corregido
+
+            Log.d("SyncWorker", "✅ Datos insertados en la base de datos correctamente")
+
             Result.success()
+        } catch (e: HttpException) {
+            Log.e("SyncWorker", "❌ Error HTTP: ${e.code()} - ${e.message()}", e)
+            Result.retry() // Reintentar en caso de error HTTP
         } catch (e: Exception) {
+            Log.e("SyncWorker", "❌ Error general: ${e.message}", e)
             Result.failure()
         }
     }
@@ -50,6 +59,7 @@ class SyncExchangeRatesWorker(
     private suspend fun insertRatesInDatabase(dao: ExchangeRateDao, rates: List<ExchangeRate>) {
         withContext(Dispatchers.IO) {
             dao.insertRates(rates)
+            Log.d("SyncWorker", "📥 ${rates.size} registros insertados en SQLite.")
         }
     }
 }

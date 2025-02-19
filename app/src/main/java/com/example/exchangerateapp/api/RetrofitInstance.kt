@@ -6,6 +6,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitInstance {
     private const val BASE_URL = "https://v6.exchangerate-api.com/"
 
+    private const val API_KEY = "f26e2020534c352ce224942f" // Tu API Key
+
     val api: ExchangeRateApi by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -13,4 +15,7 @@ object RetrofitInstance {
             .build()
             .create(ExchangeRateApi::class.java)
     }
+
+    // Método para obtener los datos con la API key
+    suspend fun fetchExchangeRates() = api.getExchangeRates(API_KEY)
 }

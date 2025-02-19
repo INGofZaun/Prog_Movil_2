@@ -1,19 +1,17 @@
 package com.example.exchangerateapp.api
 
-import com.example.exchangerateapp.data.ExchangeRate
 import retrofit2.http.GET
-import retrofit2.http.Query
+import retrofit2.http.Path
 
 interface ExchangeRateApi {
-    // Endpoint para obtener los tipos de cambio
-    @GET("v4/latest")
+    @GET("v6/{apiKey}/latest/USD")  // API Key en la URL
     suspend fun getExchangeRates(
-        @Query("base") baseCurrency: String = "USD" // Moneda base por defecto (USD)
+        @Path("apiKey") apiKey: String  // Parámetro en la URL
     ): ExchangeRateResponse
 }
 
 data class ExchangeRateResponse(
-    val base: String,
-    val date: String,
-    val rates: Map<String, Double> // Mapa de tasas de cambio
+    val base_code: String,  // La API usa "base_code", no "base"
+    val time_last_update_utc: String, // La API usa este campo para la fecha
+    val conversion_rates: Map<String, Double> // La API usa "conversion_rates"
 )

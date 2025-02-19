@@ -3,6 +3,7 @@ package com.example.exchangerateapp.ui
 import android.app.Application
 import android.database.Cursor
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.exchangerateapp.provider.ExchangeRateProvider
@@ -28,6 +29,8 @@ class ExchangeRateViewModel(application: Application) : AndroidViewModel(applica
 
     private fun loadExchangeRates() {
         viewModelScope.launch {
+            Log.e("ExchangeRateViewModel", "Cargando datos desde el ContentProvider...")
+
             val contentResolver = getApplication<Application>().contentResolver
             val uri = Uri.parse("content://${ExchangeRateProvider.AUTHORITY}/${ExchangeRateProvider.TABLE_NAME}")
             val cursor: Cursor? = contentResolver.query(uri, null, null, null, null)
@@ -42,8 +45,10 @@ class ExchangeRateViewModel(application: Application) : AndroidViewModel(applica
 
                     list.add(ExchangeRateUI(date, baseCurrency, targetCurrency, rate))
                 }
+
+                Log.e("ExchangeRateViewModel", "Datos obtenidos del ContentProvider: $list")
                 _exchangeRates.value = list
-            }
+            } ?: Log.e("ExchangeRateViewModel", "Cursor vacío, no se encontraron datos.")
         }
     }
 }
